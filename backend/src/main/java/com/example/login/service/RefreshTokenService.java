@@ -1,7 +1,7 @@
 package com.example.login.service;
 
 import com.example.login.entity.RefreshToken;
-import com.example.login.repository.RefreshTokenRepository;
+import com.example.login.mapper.RefreshTokenMapper;
 import com.example.login.util.JwtTokenProvider;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +11,15 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class RefreshTokenService {
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenMapper refreshTokenMapper;
     private final JwtTokenProvider tokenProvider;
 
     public RefreshToken findByRefreshToken(String refreshToken) {
-        return refreshTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("Unexpected token"));
+        RefreshToken token = refreshTokenMapper.findByRefreshToken(refreshToken);
+        if (token == null) {
+            throw new IllegalArgumentException("Unexpected token");
+        }
+        return token;
     }
 
     @Transactional
@@ -24,6 +27,6 @@ public class RefreshTokenService {
         String token = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
         Long userId = tokenProvider.getUserId(token);
 
-        refreshTokenRepository.deleteByUserId(userId);
+        refreshTokenMapper.deleteByUserNo(userId);
     }
 }

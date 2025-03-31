@@ -5,7 +5,6 @@ import com.example.login.entity.Password;
 import com.example.login.entity.User;
 import com.example.login.mapper.PasswordMapper;
 import com.example.login.mapper.UserMapper;
-import com.example.login.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.security.SecureRandom;
@@ -18,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+
     private final PasswordEncoder passwordEncoder;
     private final PasswordMapper passwordMapper;
     private final UserMapper userMapper;
@@ -56,18 +55,30 @@ public class UserService {
         return userNo;
     }
 
+    // findById 메서드 수정
     public User findById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Unexpected user"));
+        User user = userMapper.findByUserNo(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("Unexpected user");
+        }
+        return user;
     }
 
+    // findByEmail 메서드 수정
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Unexpected user"));
+        User user = userMapper.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("Unexpected user");
+        }
+        return user;
     }
 
+    // findByUsername 메서드 수정
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Unexpected user"));
+        User user = userMapper.findByUserName(username);
+        if (user == null) {
+            throw new IllegalArgumentException("Unexpected user");
+        }
+        return user;
     }
 }
