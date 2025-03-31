@@ -1,0 +1,93 @@
+# MariaDB Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-secret
+type: Opaque
+data:
+  password: MXEydzNlJA==  # "1q2w3e$"의 base64 인코딩 값
+---
+# MariaDB 배포
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:10.6
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: password
+        - name: MYSQL_DATABASE
+          value: "login"
+---
+# MariaDB 서비스
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+# 스프링 부트 애플리케이션 배포
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: login-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: login-api
+  template:
+    metadata:
+      labels:
+        app: login-api
+    spec:
+      containers:
+      - name: login-api
+        image: gmna974/deployment:latest # 실제 이미지로 교체
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mariadb://mariadb:3306/login"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secret
+              key: password
+---
+# 스프링 부트 애플리케이션 서비스
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-api
+spec:
+  selector:
+    app: login-api
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer

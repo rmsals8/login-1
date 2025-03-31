@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.login.mapper.UserMapper">
+    <select id="findByUserName" resultType="User">
+        SELECT user_no as userNo, user_name as userName, login_type as loginType
+        FROM users 
+        WHERE user_name = #{userName}
+    </select>
+    
+    <select id="findByUserNo" resultType="User">
+        SELECT user_no as userNo, user_name as userName, login_type as loginType
+        FROM users 
+        WHERE user_no = #{userNo}
+    </select>
+    
+    <select id="findByEmail" resultType="User">
+        SELECT user_no as userNo, user_name as userName, email, login_type as loginType
+        FROM users 
+        WHERE email = #{email}
+    </select>
+    
+    <insert id="save" parameterType="User">
+        <if test="userNo == null">
+            INSERT INTO users (user_name, login_type) 
+            VALUES (#{userName}, #{loginType})
+        </if>
+        <if test="userNo != null">
+            UPDATE users 
+            SET user_name = #{userName}, 
+                login_type = #{loginType}
+            WHERE user_no = #{userNo}
+        </if>
+    </insert>
+    
+    <select id="getLastInsertId" resultType="Long">
+        SELECT LAST_INSERT_ID()
+    </select>
+</mapper>

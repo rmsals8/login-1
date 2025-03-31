@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.login.mapper.RefreshTokenMapper">
+    <select id="findByUserNo" resultType="RefreshToken">
+        SELECT id, user_no as userNo, refresh_token as refreshToken
+        FROM refresh_tokens
+        WHERE user_no = #{userNo}
+    </select>
+    
+    <select id="findByRefreshToken" resultType="RefreshToken">
+        SELECT id, user_no as userNo, refresh_token as refreshToken
+        FROM refresh_tokens
+        WHERE refresh_token = #{refreshToken}
+    </select>
+    
+    <insert id="save" parameterType="RefreshToken">
+        INSERT INTO refresh_tokens (user_no, refresh_token)
+        VALUES (#{userNo}, #{refreshToken})
+    </insert>
+    
+    <update id="update" parameterType="RefreshToken">
+        UPDATE refresh_tokens
+        SET refresh_token = #{refreshToken}
+        WHERE user_no = #{userNo}
+    </update>
+    
+    <delete id="deleteByUserNo">
+        DELETE FROM refresh_tokens
+        WHERE user_no = #{userNo}
+    </delete>
+</mapper>

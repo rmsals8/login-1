@@ -1,0 +1,44 @@
+version: '3'
+services:
+  # 스프링 부트 애플리케이션
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: login-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/login
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=1q2w3e$
+    depends_on:
+      - mariadb
+    networks:
+      - login-network
+    # 개발 중 소스 코드 변경 시 자동 반영을 위한 볼륨 설정
+    volumes:
+      - ./backend:/app/backend
+
+  # MariaDB 데이터베이스
+  mariadb:
+    image: mariadb:10.6
+    container_name: login-mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=1q2w3e$
+      - MYSQL_DATABASE=login
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - login-network
+
+# 네트워크 정의
+networks:
+  login-network:
+    driver: bridge
+
+# 볼륨 정의
+volumes:
+  mariadb-data:
