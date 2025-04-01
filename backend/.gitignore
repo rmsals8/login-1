@@ -1,4 +1,10 @@
+# 프로젝트 특정 파일 제외
 HELP.md
+.gitlab-ci.yml
+kubernetes-all.yaml
+docker-compose.yml
+
+# Gradle 관련 파일
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
