@@ -21,6 +21,9 @@ public class CaptchaConfig {
         properties.setProperty("kaptcha.textproducer.char.space", "5");
         properties.setProperty("kaptcha.textproducer.char.length", "6");
 
+        properties.setProperty("kaptcha.image.width", "400");
+        properties.setProperty("kaptcha.image.height", "200");
+
         Config config = new Config(properties);
         kaptcha.setConfig(config);
 
