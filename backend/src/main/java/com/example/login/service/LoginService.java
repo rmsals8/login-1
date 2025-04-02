@@ -29,21 +29,47 @@ public class LoginService {
         private final UserMapper userMapper;
         private final PasswordMapper passwordMapper;
         private final RefreshTokenMapper refreshTokenMapper;
-        private final LogRepository logRepository; // JPA 리포지토리
+        private final LogRepository logRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenProvider tokenProvider;
 
         public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-        public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-        public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+        public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(7);
+        public static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(30);
 
         @Transactional
         public LoginResponseDto login(LoginRequestDto loginRequest, HttpServletRequest request,
                         HttpServletResponse response) {
+                // 로그인 실패 횟수 관리
+                Integer failCount = (Integer) request.getSession().getAttribute("loginFailCount");
+                if (failCount == null) {
+                        failCount = 0;
+                }
+
+                // 실패 횟수가 3회 이상이면 캡차 검증
+                if (failCount >= 3) {
+                        String captchaInput = loginRequest.getCaptcha();
+                        String sessionCaptcha = (String) request.getSession().getAttribute("captchaText");
+
+                        if (captchaInput == null || sessionCaptcha == null || !sessionCaptcha.equals(captchaInput)) {
+                                // 캡차 오류 로그 기록
+                                saveLog(null, "CAPTCHA_FAIL", "캡차 검증 실패: " + loginRequest.getUsername(),
+                                                loginRequest.getIpAddress(), request.getHeader("User-Agent"));
+
+                                throw new BadCredentialsException("자동입력 방지 문자가 일치하지 않습니다.");
+                        }
+
+                        // 성공시 캡차 세션 정보 삭제
+                        request.getSession().removeAttribute("captchaText");
+                }
+
                 // 1. 사용자명으로 사용자 조회
                 User user = userMapper.findByUserName(loginRequest.getUsername());
 
                 if (user == null) {
+                        // 로그인 실패 횟수 증가
+                        request.getSession().setAttribute("loginFailCount", failCount + 1);
+
                         // 사용자가 존재하지 않는 경우 로그 기록 (JPA)
                         saveLog(null, "LOGIN_FAIL", "사용자가 존재하지 않음: " + loginRequest.getUsername(),
                                         loginRequest.getIpAddress(), request.getHeader("User-Agent"));
@@ -55,6 +81,9 @@ public class LoginService {
                 Password password = passwordMapper.findByUserNo(user.getUserNo());
 
                 if (password == null) {
+                        // 로그인 실패 횟수 증가
+                        request.getSession().setAttribute("loginFailCount", failCount + 1);
+
                         // 비밀번호 정보가 없는 경우 (소셜 로그인 사용자일 수 있음)
                         saveLog(user.getUserNo(), "LOGIN_FAIL", "비밀번호 정보 없음: " + loginRequest.getUsername(),
                                         loginRequest.getIpAddress(), request.getHeader("User-Agent"));
@@ -63,12 +92,18 @@ public class LoginService {
                 }
 
                 if (!passwordEncoder.matches(loginRequest.getPassword(), password.getPassword())) {
+                        // 로그인 실패 횟수 증가
+                        request.getSession().setAttribute("loginFailCount", failCount + 1);
+
                         // 비밀번호 불일치 로그 기록 (JPA)
                         saveLog(user.getUserNo(), "LOGIN_FAIL", "비밀번호 불일치: " + loginRequest.getUsername(),
                                         loginRequest.getIpAddress(), request.getHeader("User-Agent"));
 
                         throw new BadCredentialsException("Invalid username or password");
                 }
+
+                // 로그인 성공 시 실패 횟수 초기화
+                request.getSession().removeAttribute("loginFailCount");
 
                 // 3. JWT 토큰 생성
                 String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);

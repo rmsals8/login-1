@@ -31,17 +31,15 @@ public class UserService {
 
     @Transactional
     public Long save(AddUserRequest dto) {
-        // 1. User 저장
         User user = User.builder()
                 .userName(dto.getUsername())
-                .loginType(0) // 일반 로그인
+                .loginType(0)
                 .build();
 
         userMapper.save(user);
         Long userNo = userMapper.getLastInsertId();
 
-        // 2. Password 저장
-        String salt = generateSalt(); // 솔트 생성 메서드 필요
+        String salt = generateSalt();
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
 
         Password password = Password.builder()
@@ -55,7 +53,6 @@ public class UserService {
         return userNo;
     }
 
-    // findById 메서드 수정
     public User findById(Long userId) {
         User user = userMapper.findByUserNo(userId);
         if (user == null) {
@@ -64,7 +61,6 @@ public class UserService {
         return user;
     }
 
-    // findByEmail 메서드 수정
     public User findByEmail(String email) {
         User user = userMapper.findByEmail(email);
         if (user == null) {
@@ -73,7 +69,6 @@ public class UserService {
         return user;
     }
 
-    // findByUsername 메서드 수정
     public User findByUsername(String username) {
         User user = userMapper.findByUserName(username);
         if (user == null) {

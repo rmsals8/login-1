@@ -19,5 +19,5 @@ public class LoginRequestDto {
     private String password;
 
     private String ipAddress;
-
+    private String captcha;
 }
