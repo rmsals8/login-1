@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.login.mapper.SocialLoginMapper">
+    
+    <select id="findByExternalId" resultType="SocialLogin">
+        SELECT 
+            social_login_id as socialLoginId, 
+            user_no as userNo, 
+            social_code as socialCode, 
+            external_id as externalId, 
+            access_token as accessToken, 
+            update_date as updateDate
+        FROM 
+            social_logins
+        WHERE 
+            external_id = #{externalId} AND social_code = #{socialCode}
+    </select>
+    
+    <select id="findByUserNo" resultType="SocialLogin">
+        SELECT 
+            social_login_id as socialLoginId, 
+            user_no as userNo, 
+            social_code as socialCode, 
+            external_id as externalId, 
+            access_token as accessToken, 
+            update_date as updateDate
+        FROM 
+            social_logins
+        WHERE 
+            user_no = #{userNo} AND social_code = #{socialCode}
+    </select>
+    
+    <insert id="save" parameterType="SocialLogin">
+        INSERT INTO social_logins (
+            user_no, 
+            social_code, 
+            external_id, 
+            access_token
+        ) VALUES (
+            #{userNo}, 
+            #{socialCode}, 
+            #{externalId}, 
+            #{accessToken}
+        )
+    </insert>
+    
+    <update id="update" parameterType="SocialLogin">
+        UPDATE social_logins
+        SET 
+            access_token = #{accessToken},
+            update_date = NOW()
+        WHERE 
+            user_no = #{userNo} AND 
+            social_code = #{socialCode}
+    </update>
+    
+</mapper>
