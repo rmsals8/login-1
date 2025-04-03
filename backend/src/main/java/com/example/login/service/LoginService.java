@@ -34,7 +34,10 @@ public class LoginService {
         private final JwtTokenProvider tokenProvider;
 
         public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-        public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(7);
+
+        // 기본 토큰 유효 기간 설정
+        public static final Duration DEFAULT_REFRESH_TOKEN_DURATION = Duration.ofDays(7);
+        public static final Duration EXTENDED_REFRESH_TOKEN_DURATION = Duration.ofDays(30); // 로그인 유지 시 30일
         public static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(30);
 
         @Transactional
@@ -109,12 +112,18 @@ public class LoginService {
                 String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
 
                 // 4. 리프레시 토큰 생성 및 저장 (MyBatis)
-                String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
+                // 로그인 유지 여부에 따라 리프레시 토큰 유효 기간 설정
+                Duration refreshTokenDuration = loginRequest.isRememberMe()
+                                ? EXTENDED_REFRESH_TOKEN_DURATION
+                                : DEFAULT_REFRESH_TOKEN_DURATION;
+
+                String refreshToken = tokenProvider.generateToken(user, refreshTokenDuration);
                 saveRefreshToken(user.getUserNo(), refreshToken);
-                addRefreshTokenToCookie(request, response, refreshToken);
+                addRefreshTokenToCookie(request, response, refreshToken, refreshTokenDuration);
 
                 // 5. 로그인 성공 로그 기록 (JPA)
-                saveLog(user.getUserNo(), "LOGIN_SUCCESS", "로그인 성공: " + loginRequest.getUsername(),
+                saveLog(user.getUserNo(), "LOGIN_SUCCESS", "로그인 성공: " + loginRequest.getUsername()
+                                + (loginRequest.isRememberMe() ? " (로그인 유지)" : ""),
                                 loginRequest.getIpAddress(), request.getHeader("User-Agent"));
 
                 // 6. 응답 생성 및 반환
@@ -155,13 +164,18 @@ public class LoginService {
         }
 
         private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response,
-                        String refreshToken) {
-                int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
+                        String refreshToken, Duration duration) {
+                int cookieMaxAge = (int) duration.toSeconds();
 
                 Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
                 cookie.setPath("/");
                 cookie.setHttpOnly(true);
                 cookie.setMaxAge(cookieMaxAge);
+
+                // HTTPS를 사용하는 경우 Secure 속성 추가
+                if (request.isSecure()) {
+                        cookie.setSecure(true);
+                }
 
                 response.addCookie(cookie);
         }

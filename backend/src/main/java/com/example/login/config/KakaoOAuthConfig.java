@@ -16,10 +16,22 @@ public class KakaoOAuthConfig {
 
     // 카카오 인증 URL
     public String getAuthorizationUrl() {
-        return "https://kauth.kakao.com/oauth/authorize"
-                + "?client_id=" + clientId
-                + "&redirect_uri=" + redirectUrl
-                + "&response_type=code";
+        return getAuthorizationUrl(null);
+    }
+
+    // state 파라미터를 포함한 카카오 인증 URL
+    public String getAuthorizationUrl(String state) {
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append("https://kauth.kakao.com/oauth/authorize")
+                .append("?client_id=").append(clientId)
+                .append("&redirect_uri=").append(redirectUrl)
+                .append("&response_type=code");
+
+        if (state != null && !state.isEmpty()) {
+            urlBuilder.append("&state=").append(state);
+        }
+
+        return urlBuilder.toString();
     }
 
     // 카카오 토큰 요청 URL

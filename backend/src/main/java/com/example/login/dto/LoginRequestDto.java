@@ -20,4 +20,7 @@ public class LoginRequestDto {
 
     private String ipAddress;
     private String captcha;
+
+    // 로그인 유지 옵션 추가
+    private boolean rememberMe;
 }

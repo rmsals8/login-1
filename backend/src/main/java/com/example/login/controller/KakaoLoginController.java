@@ -6,7 +6,6 @@ import com.example.login.service.KakaoLoginService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,7 +29,7 @@ public class KakaoLoginController {
     }
 
     /**
-     * 카카오 인증 콜백 처리
+     * 카카오 인증 콜백 처리 - 홈페이지로 리다이렉트
      */
     @GetMapping("/callback")
     public RedirectView kakaoCallback(
@@ -38,7 +37,7 @@ public class KakaoLoginController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        // 카카오 로그인 처리
+        // 카카오 로그인 처리 (로그인 유지 없이)
         LoginResponseDto loginResponse = kakaoLoginService.kakaoLogin(code, request, response);
 
         // 로그인 정보를 세션 또는 쿠키에 저장 (필요에 따라)
