@@ -33,13 +33,20 @@ public class KakaoLoginController {
      * 카카오 인증 콜백 처리
      */
     @GetMapping("/callback")
-    public ResponseEntity<LoginResponseDto> kakaoCallback(
+    public RedirectView kakaoCallback(
             @RequestParam("code") String code,
             HttpServletRequest request,
             HttpServletResponse response) {
 
+        // 카카오 로그인 처리
         LoginResponseDto loginResponse = kakaoLoginService.kakaoLogin(code, request, response);
 
-        return ResponseEntity.ok(loginResponse);
+        // 로그인 정보를 세션 또는 쿠키에 저장 (필요에 따라)
+        request.getSession().setAttribute("userToken", loginResponse.getToken());
+        request.getSession().setAttribute("userId", loginResponse.getUserId());
+        request.getSession().setAttribute("username", loginResponse.getUsername());
+
+        // 홈페이지로 리다이렉트 (프론트엔드 주소로 변경 필요)
+        return new RedirectView("http://localhost:8081/");
     }
 }
